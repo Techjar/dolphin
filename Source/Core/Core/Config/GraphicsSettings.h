@@ -26,6 +26,7 @@ extern const ConfigInfo<int> GFX_ADAPTER;
 extern const ConfigInfo<bool> GFX_WIDESCREEN_HACK;
 extern const ConfigInfo<AspectMode> GFX_ASPECT_RATIO;
 extern const ConfigInfo<AspectMode> GFX_SUGGESTED_ASPECT_RATIO;
+extern const ConfigInfo<float> GFX_CUSTOM_ASPECT_RATIO;
 extern const ConfigInfo<bool> GFX_CROP;
 extern const ConfigInfo<int> GFX_SAFE_TEXTURE_CACHE_COLOR_SAMPLES;
 extern const ConfigInfo<bool> GFX_SHOW_FPS;

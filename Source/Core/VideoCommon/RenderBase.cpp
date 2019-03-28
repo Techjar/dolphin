@@ -538,6 +538,10 @@ float Renderer::CalculateDrawAspectRatio() const
     // If stretch is enabled, we prefer the aspect ratio of the window.
     return (static_cast<float>(m_backbuffer_width) / static_cast<float>(m_backbuffer_height));
   }
+  if (g_ActiveConfig.aspect_mode == AspectMode::Custom)
+  {
+    return g_ActiveConfig.fCustomAspect;
+  }
 
   // The rendering window aspect ratio as a proportion of the 4:3 or 16:9 ratio
   if (g_ActiveConfig.aspect_mode == AspectMode::AnalogWide ||
@@ -691,6 +695,8 @@ void Renderer::UpdateDrawRectangle()
     case AspectMode::AnalogWide:
       target_aspect = AspectToWidescreen(VideoInterface::GetAspectRatio());
       break;
+    case AspectMode::Custom:
+      target_aspect = g_ActiveConfig.fCustomAspect;
     case AspectMode::Auto:
     default:
       target_aspect = source_aspect;
@@ -725,7 +731,8 @@ void Renderer::UpdateDrawRectangle()
   draw_height = crop_height = 1;
 
   // crop the picture to a standard aspect ratio
-  if (g_ActiveConfig.bCrop && g_ActiveConfig.aspect_mode != AspectMode::Stretch)
+  if (g_ActiveConfig.bCrop && g_ActiveConfig.aspect_mode != AspectMode::Stretch &&
+      g_ActiveConfig.aspect_mode != AspectMode::Custom)
   {
     float expected_aspect = (g_ActiveConfig.aspect_mode == AspectMode::AnalogWide ||
                              (g_ActiveConfig.aspect_mode != AspectMode::Analog && m_aspect_wide)) ?

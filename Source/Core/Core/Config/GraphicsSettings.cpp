@@ -25,6 +25,8 @@ const ConfigInfo<AspectMode> GFX_ASPECT_RATIO{{System::GFX, "Settings", "AspectR
                                               AspectMode::Auto};
 const ConfigInfo<AspectMode> GFX_SUGGESTED_ASPECT_RATIO{
     {System::GFX, "Settings", "SuggestedAspectRatio"}, AspectMode::Auto};
+const ConfigInfo<float> GFX_CUSTOM_ASPECT_RATIO{{System::GFX, "Settings", "CustomAspectRatio"},
+                                                16.0f / 9.0f};
 const ConfigInfo<bool> GFX_CROP{{System::GFX, "Settings", "Crop"}, false};
 const ConfigInfo<int> GFX_SAFE_TEXTURE_CACHE_COLOR_SAMPLES{
     {System::GFX, "Settings", "SafeTextureCacheColorSamples"}, 128};

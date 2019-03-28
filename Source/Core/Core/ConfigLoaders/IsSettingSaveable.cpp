@@ -42,6 +42,7 @@ bool IsSettingSaveable(const Config::ConfigLocation& config_location)
 
       Config::GFX_WIDESCREEN_HACK.location,
       Config::GFX_ASPECT_RATIO.location,
+      Config::GFX_CUSTOM_ASPECT_RATIO.location,
       Config::GFX_CROP.location,
       Config::GFX_SAFE_TEXTURE_CACHE_COLOR_SAMPLES.location,
       Config::GFX_SHOW_FPS.location,

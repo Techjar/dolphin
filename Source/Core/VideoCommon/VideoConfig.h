@@ -30,6 +30,7 @@ enum class AspectMode : int
   AnalogWide,
   Analog,
   Stretch,
+  Custom,
 };
 
 enum class StereoMode : int
@@ -63,6 +64,7 @@ struct VideoConfig final
   bool bWidescreenHack;
   AspectMode aspect_mode;
   AspectMode suggested_aspect_mode;
+  float fCustomAspect;
   bool bCrop;  // Aspect ratio controls.
   bool bShaderCache;
 

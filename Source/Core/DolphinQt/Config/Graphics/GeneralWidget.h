@@ -11,6 +11,7 @@ class GraphicsWindow;
 class QCheckBox;
 class QComboBox;
 class QRadioButton;
+class QDoubleSpinBox;
 class QGridLayout;
 
 namespace X11Utils
@@ -42,6 +43,7 @@ private:
   QComboBox* m_backend_combo;
   QComboBox* m_adapter_combo;
   QComboBox* m_aspect_combo;
+  QDoubleSpinBox* m_aspect_spin;
   QCheckBox* m_enable_vsync;
   QCheckBox* m_enable_fullscreen;
 

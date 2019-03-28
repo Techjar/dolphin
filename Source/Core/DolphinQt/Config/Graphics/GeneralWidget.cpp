@@ -6,12 +6,14 @@
 
 #include <QCheckBox>
 #include <QComboBox>
+#include <QDoubleSpinBox>
 #include <QGridLayout>
 #include <QGroupBox>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QRadioButton>
 #include <QSignalBlocker>
+#include <QSizePolicy>
 #include <QVBoxLayout>
 
 #include "Core/Config/GraphicsSettings.h"
@@ -38,6 +40,8 @@ GeneralWidget::GeneralWidget(X11Utils::XRRConfiguration* xrr_config, GraphicsWin
   ConnectWidgets();
   AddDescriptions();
   emit BackendChanged(QString::fromStdString(SConfig::GetInstance().m_strVideoBackend));
+  m_aspect_spin->setEnabled(static_cast<AspectMode>(m_aspect_combo->currentIndex()) ==
+                            AspectMode::Custom);
 
   connect(parent, &GraphicsWindow::BackendChanged, this, &GeneralWidget::OnBackendChanged);
   connect(&Settings::Instance(), &Settings::EmulationStateChanged, this,
@@ -54,9 +58,13 @@ void GeneralWidget::CreateWidgets()
   m_video_layout = new QGridLayout();
 
   m_backend_combo = new QComboBox();
-  m_aspect_combo =
-      new GraphicsChoice({tr("Auto"), tr("Force 16:9"), tr("Force 4:3"), tr("Stretch to Window")},
-                         Config::GFX_ASPECT_RATIO);
+  m_aspect_combo = new GraphicsChoice(
+      {tr("Auto"), tr("Force 16:9"), tr("Force 4:3"), tr("Stretch to Window"), tr("Custom")},
+      Config::GFX_ASPECT_RATIO);
+  m_aspect_spin = new QDoubleSpinBox;
+  m_aspect_spin->setRange(0.01, 100);
+  m_aspect_spin->setSingleStep(0.01);
+  m_aspect_spin->setDecimals(5);
   m_adapter_combo = new QComboBox;
   m_enable_vsync = new GraphicsBool(tr("V-Sync"), Config::GFX_VSYNC);
   m_enable_fullscreen = new QCheckBox(tr("Use Fullscreen"));
@@ -76,8 +84,11 @@ void GeneralWidget::CreateWidgets()
   m_video_layout->addWidget(new QLabel(tr("Aspect Ratio:")), 3, 0);
   m_video_layout->addWidget(m_aspect_combo, 3, 1);
 
-  m_video_layout->addWidget(m_enable_vsync, 4, 0);
-  m_video_layout->addWidget(m_enable_fullscreen, 4, 1);
+  m_video_layout->addWidget(new QLabel(tr("Custom Aspect Ratio:")), 4, 0);
+  m_video_layout->addWidget(m_aspect_spin, 4, 1);
+
+  m_video_layout->addWidget(m_enable_vsync, 5, 0);
+  m_video_layout->addWidget(m_enable_fullscreen, 5, 1);
 
   // Other
   auto* m_options_box = new QGroupBox(tr("Other"));
@@ -143,6 +154,13 @@ void GeneralWidget::ConnectWidgets()
             g_Config.iAdapter = index;
             Config::SetBaseOrCurrent(Config::GFX_ADAPTER, index);
           });
+  connect(m_aspect_combo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+          this, [this](int index) {
+            m_aspect_spin->setEnabled(static_cast<AspectMode>(index) == AspectMode::Custom);
+          });
+  connect(m_aspect_spin,
+          static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this,
+          &GeneralWidget::SaveSettings);
 
   for (QCheckBox* checkbox : {m_enable_fullscreen, m_render_main_window, m_autoadjust_window_size})
     connect(checkbox, &QCheckBox::toggled, this, &GeneralWidget::SaveSettings);
@@ -153,6 +171,9 @@ void GeneralWidget::LoadSettings()
   // Video Backend
   m_backend_combo->setCurrentIndex(m_backend_combo->findData(
       QVariant(QString::fromStdString(SConfig::GetInstance().m_strVideoBackend))));
+
+  // Custom Aspect Ratio
+  m_aspect_spin->setValue(Config::Get(Config::GFX_CUSTOM_ASPECT_RATIO));
 
   // Enable Fullscreen
   m_enable_fullscreen->setChecked(SConfig::GetInstance().bFullscreen);
@@ -191,6 +212,8 @@ void GeneralWidget::SaveSettings()
     emit BackendChanged(QString::fromStdString(current_backend));
   }
 
+  // Custom Aspect Ratio
+  Config::SetBaseOrCurrent(Config::GFX_CUSTOM_ASPECT_RATIO, m_aspect_spin->value());
   // Enable Fullscreen
   SConfig::GetInstance().bFullscreen = m_enable_fullscreen->isChecked();
   // Autoadjust window size
@@ -240,6 +263,9 @@ void GeneralWidget::AddDescriptions()
       "ratio\nForce 16:9: Mimics an analog TV with a widescreen aspect ratio.\nForce 4:3: "
       "Mimics a standard 4:3 analog TV.\nStretch to Window: Stretches the picture to the "
       "window size.\n\nIf unsure, select Auto.");
+  static const char TR_CUSTOM_ASPECT_RATIO_DESCRIPTION[] =
+      QT_TR_NOOP("Custom aspect ratio as a decimal value. To a convert a fractional aspect ratio "
+                 "such as 16:9 to decimal, simply divide the left number by the right.");
   static const char TR_VSYNC_DESCRIPTION[] =
       QT_TR_NOOP("Waits for vertical blanks in order to prevent tearing. Decreases performance if "
                  "emulation speed is below 100%.\n\nIf unsure, leave this unchecked.");
@@ -282,6 +308,7 @@ void GeneralWidget::AddDescriptions()
   AddDescription(m_backend_combo, TR_BACKEND_DESCRIPTION);
   AddDescription(m_adapter_combo, TR_ADAPTER_DESCRIPTION);
   AddDescription(m_aspect_combo, TR_ASPECT_RATIO_DESCRIPTION);
+  AddDescription(m_aspect_spin, TR_CUSTOM_ASPECT_RATIO_DESCRIPTION);
   AddDescription(m_enable_vsync, TR_VSYNC_DESCRIPTION);
   AddDescription(m_enable_fullscreen, TR_FULLSCREEN_DESCRIPTION);
   AddDescription(m_show_fps, TR_SHOW_FPS_DESCRIPTION);
