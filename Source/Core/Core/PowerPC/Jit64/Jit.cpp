@@ -730,6 +730,9 @@ void Jit64::Jit(u32 em_address)
     ClearCache();
   }
 
+  INFO_LOG(POWERPC, "Cache remaining: %zu near code, %zu far code, %zu trampoline", GetSpaceLeft(),
+           m_far_code.GetSpaceLeft(), trampolines.GetSpaceLeft());
+
   std::size_t block_size = m_code_buffer.size();
 
   if (SConfig::GetInstance().bEnableDebugging)
