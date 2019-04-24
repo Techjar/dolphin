@@ -84,7 +84,6 @@ public:
   void WriteExceptionExit();
   void WriteExternalExceptionExit();
   void WriteRfiExitDestInRSCRATCH();
-  void WriteIdleExit(u32 destination);
   bool Cleanup();
 
   void GenerateConstantOverflow(bool overflow);
