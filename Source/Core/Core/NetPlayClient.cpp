@@ -1474,6 +1474,8 @@ bool NetPlayClient::StartGame(const std::string& path)
 
   m_first_pad_status_received.fill(false);
 
+  m_timebases.clear();
+
   if (m_dialog->IsRecording())
   {
     if (Movie::IsReadOnly())
@@ -2226,15 +2228,13 @@ bool NetPlayClient::IsLocalPlayer(const PlayerId pid) const
   return pid == m_local_player->pid;
 }
 
-static std::vector<std::tuple<u64, u32, u32>> s_timebases;
-
 void NetPlayClient::SendTimeBase()
 {
   std::lock_guard<std::mutex> lk(crit_netplay_client);
 
   const sf::Uint64 timebase = SystemTimers::GetFakeTimeBase();
 
-  s_timebases.push_back(std::make_tuple(timebase, netplay_client->m_timebase_frame, PowerPC::ppcState.pc));
+  netplay_client->m_timebases.emplace_back(timebase, netplay_client->m_timebase_frame, PowerPC::ppcState.pc);
 
   netplay_client->m_timebase_frame++;
 }
@@ -2244,14 +2244,14 @@ void NetPlayClient::ActuallySendTimeBase()
   sf::Packet packet;
   packet << static_cast<MessageId>(NP_MSG_TIMEBASE);
 
-  for (auto p : s_timebases)
+  for (auto p : netplay_client->m_timebases)
   {
     packet << sf::Uint64{std::get<0>(p)};
     packet << std::get<1>(p);
     packet << std::get<2>(p);
   }
 
-  s_timebases.clear();
+  netplay_client->m_timebases.clear();
 
   netplay_client->SendAsync(std::move(packet));
 }

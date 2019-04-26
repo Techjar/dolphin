@@ -268,6 +268,7 @@ private:
 
   u64 m_initial_rtc = 0;
   u32 m_timebase_frame = 0;
+  std::vector<std::tuple<u64, u32, u32>> m_timebases;
 };
 
 void NetPlay_Enable(NetPlayClient* const np);
