@@ -341,23 +341,31 @@ void RegisterMMIO(MMIO::Mapping* mmio, u32 base)
   mmio->Register(base | VI_PRERETRACE_HI, MMIO::DirectRead<u16>(&m_InterruptRegister[0].Hi),
                  MMIO::ComplexWrite<u16>([](u32, u16 val) {
                    m_InterruptRegister[0].Hi = val;
+                   //printf("mmio0\n");
+                   INFO_LOG(VIDEOINTERFACE, "VI MMIO 0: %lu", CoreTiming::GetTicks());
                    UpdateInterrupts();
                  }));
   mmio->Register(base | VI_POSTRETRACE_HI, MMIO::DirectRead<u16>(&m_InterruptRegister[1].Hi),
                  MMIO::ComplexWrite<u16>([](u32, u16 val) {
                    m_InterruptRegister[1].Hi = val;
+                   //printf("mmio1\n");
+                   INFO_LOG(VIDEOINTERFACE, "VI MMIO 1: %lu", CoreTiming::GetTicks());
                    UpdateInterrupts();
                  }));
   mmio->Register(base | VI_DISPLAY_INTERRUPT_2_HI,
                  MMIO::DirectRead<u16>(&m_InterruptRegister[2].Hi),
                  MMIO::ComplexWrite<u16>([](u32, u16 val) {
                    m_InterruptRegister[2].Hi = val;
+                   //printf("mmio2\n");
+                   INFO_LOG(VIDEOINTERFACE, "VI MMIO 2: %lu", CoreTiming::GetTicks());
                    UpdateInterrupts();
                  }));
   mmio->Register(base | VI_DISPLAY_INTERRUPT_3_HI,
                  MMIO::DirectRead<u16>(&m_InterruptRegister[3].Hi),
                  MMIO::ComplexWrite<u16>([](u32, u16 val) {
                    m_InterruptRegister[3].Hi = val;
+                   //printf("mmio3\n");
+                   INFO_LOG(VIDEOINTERFACE, "VI MMIO 3: %lu", CoreTiming::GetTicks());
                    UpdateInterrupts();
                  }));
 
@@ -393,6 +401,7 @@ void RegisterMMIO(MMIO::Mapping* mmio, u32 base)
                      // shuffle2 clear all data, reset to default vals, and enter idle mode
                      m_DisplayControlRegister.RST = 0;
                      m_InterruptRegister = {};
+                     //printf("mmioCR\n");
                      UpdateInterrupts();
                    }
 
@@ -422,10 +431,12 @@ void UpdateInterrupts()
       (m_InterruptRegister[2].IR_INT && m_InterruptRegister[2].IR_MASK) ||
       (m_InterruptRegister[3].IR_INT && m_InterruptRegister[3].IR_MASK))
   {
+    //printf("set interrupt\n");
     ProcessorInterface::SetInterrupt(ProcessorInterface::INT_CAUSE_VI, true);
   }
   else
   {
+    //printf("clear interrupt\n");
     ProcessorInterface::SetInterrupt(ProcessorInterface::INT_CAUSE_VI, false);
   }
 }
@@ -786,6 +797,8 @@ void Update(u64 ticks)
     s_ticks_last_line_start = CoreTiming::GetTicks();
   }
 
+  //printf("update\n");
+  //INFO_LOG(VIDEOINTERFACE, "VI Update: %lu", ticks);
   UpdateInterrupts();
 }
 

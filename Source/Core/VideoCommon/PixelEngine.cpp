@@ -21,6 +21,8 @@
 #include "VideoCommon/PerfQueryBase.h"
 #include "VideoCommon/PixelShaderManager.h"
 #include "VideoCommon/VideoBackendBase.h"
+#include "Core/PowerPC/PowerPC.h"
+#include "Core/CoreTiming.h"
 
 namespace PixelEngine
 {
@@ -297,6 +299,7 @@ static void RaiseEvent()
 void SetToken(const u16 token, const bool interrupt)
 {
   DEBUG_LOG(PIXELENGINE, "VIDEO Backend raises INT_CAUSE_PE_TOKEN (btw, token: %04x)", token);
+  INFO_LOG(PIXELENGINE, "SetToken PC: %08x Tick: %d Interrupt: %s", PowerPC::ppcState.pc, CoreTiming::s_tick, interrupt ? "yes" : "no");
 
   std::lock_guard<std::mutex> lk(s_token_finish_mutex);
 
@@ -311,6 +314,7 @@ void SetToken(const u16 token, const bool interrupt)
 void SetFinish()
 {
   DEBUG_LOG(PIXELENGINE, "VIDEO Set Finish");
+  INFO_LOG(PIXELENGINE, "SetFinish PC: %08x Tick: %d", PowerPC::ppcState.pc, CoreTiming::s_tick);
 
   std::lock_guard<std::mutex> lk(s_token_finish_mutex);
 

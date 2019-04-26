@@ -22,6 +22,7 @@
 #include "Core/Core.h"
 #include "Core/NetPlayClient.h"
 #include "Core/PowerPC/PowerPC.h"
+#include "Core/HW/CPU.h"
 
 #include "VideoCommon/Fifo.h"
 #include "VideoCommon/VideoBackendBase.h"
@@ -313,6 +314,8 @@ void MoveEvents()
   }
 }
 
+u32 s_tick = 0;
+
 void Advance()
 {
   MoveEvents();
@@ -355,9 +358,9 @@ void Advance()
   if (NetPlay::IsNetPlayRunning())
     NetPlay::NetPlayClient::SendTimeBase();
 
-  //static u32 s_tick = 0;
-  //if (s_tick++ == 2330918)
-  //  Core::SetState(Core::State::Paused);
+  if (s_tick == 2346749)
+    CPU::EnableStepping(true);
+  s_tick++;
 }
 
 void LogPendingEvents()

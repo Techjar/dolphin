@@ -14,6 +14,7 @@
 #include "Core/PowerPC/Jit64Common/Jit64Constants.h"
 #include "Core/PowerPC/PPCAnalyst.h"
 #include "Core/PowerPC/PowerPC.h"
+#include "Common/GekkoDisassembler.h"
 
 struct CachedInterpreter::Instruction
 {
@@ -92,6 +93,7 @@ void CachedInterpreter::ExecuteOneBlock()
     switch (code->type)
     {
     case Instruction::Type::Common:
+      INFO_LOG(POWERPC, "%08x %s", PC, Common::GekkoDisassembler::Disassemble(code->data, PC).c_str());
       code->common_callback(UGeckoInstruction(code->data));
       break;
 
@@ -186,8 +188,8 @@ static bool CheckBreakpoint(u32 data)
 
 static bool CheckIdle(u32 idle_pc)
 {
-  INFO_LOG(POWERPC, "pc = %08x, npc = %08x idle_pc = %08x",
-           PowerPC::ppcState.pc, PowerPC::ppcState.npc, idle_pc);
+  //INFO_LOG(POWERPC, "pc = %08x, npc = %08x idle_pc = %08x",
+  //         PowerPC::ppcState.pc, PowerPC::ppcState.npc, idle_pc);
   if (PowerPC::ppcState.npc == idle_pc)
   {
     CoreTiming::Idle();
@@ -271,14 +273,14 @@ void CachedInterpreter::Jit(u32 address)
         js.firstFPInstructionFound = true;
       }
 
-      if (endblock || memcheck)
+      //if (endblock || memcheck)
         m_code.emplace_back(WritePC, op.address);
       m_code.emplace_back(PPCTables::GetInterpreterOp(op.inst), op.inst);
       if (memcheck)
         m_code.emplace_back(CheckDSI, js.downcountAmount);
       if (idle_loop)
       {
-        INFO_LOG(POWERPC, "Inserted idle skip");
+        //INFO_LOG(POWERPC, "Inserted idle skip");
         m_code.emplace_back(CheckIdle, js.blockStart);
       }
       if (endblock)

@@ -108,4 +108,6 @@ void SetFakeTBStartTicks(u64 val);
 
 void ForceExceptionCheck(s64 cycles);
 
+extern u32 s_tick;
+
 }  // end of namespace

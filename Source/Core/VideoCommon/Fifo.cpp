@@ -526,7 +526,7 @@ void UpdateWantDeterminism(bool want)
 
 bool UseDeterministicGPUThread()
 {
-  return s_use_deterministic_gpu_thread;
+  return false;
 }
 
 /* This function checks the emulated CPU - GPU distance and may wake up the GPU,
@@ -577,6 +577,7 @@ static void SyncGPUCallback(u64 ticks, s64 cyclesLate)
   s_syncing_suspended = next < 0;
   if (!s_syncing_suspended)
     CoreTiming::ScheduleEvent(next, s_event_sync_gpu, next);
+  INFO_LOG(GPFIFO, "SyncGPU: %d", CoreTiming::s_tick);
 }
 
 // Initialize GPU - CPU thread syncing, this gives us a deterministic way to start the GPU thread.
