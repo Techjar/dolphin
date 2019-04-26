@@ -93,7 +93,7 @@ void CachedInterpreter::ExecuteOneBlock()
     switch (code->type)
     {
     case Instruction::Type::Common:
-      INFO_LOG(POWERPC, "%08x %s", PC, Common::GekkoDisassembler::Disassemble(code->data, PC).c_str());
+      //INFO_LOG(POWERPC, "%08x %s", PC, Common::GekkoDisassembler::Disassemble(code->data, PC).c_str());
       code->common_callback(UGeckoInstruction(code->data));
       break;
 
