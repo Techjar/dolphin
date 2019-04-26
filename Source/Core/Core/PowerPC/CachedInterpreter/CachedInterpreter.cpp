@@ -183,6 +183,8 @@ static bool CheckBreakpoint(u32 data)
 
 static bool CheckIdle(u32 idle_pc)
 {
+  INFO_LOG(POWERPC, "pc = %08x, npc = %08x idle_pc = %08x",
+           PowerPC::ppcState.pc, PowerPC::ppcState.npc, idle_pc);
   if (PowerPC::ppcState.npc == idle_pc)
   {
     CoreTiming::Idle();
@@ -272,7 +274,10 @@ void CachedInterpreter::Jit(u32 address)
       if (memcheck)
         m_code.emplace_back(CheckDSI, js.downcountAmount);
       if (idle_loop)
+      {
+        INFO_LOG(POWERPC, "Inserted idle skip");
         m_code.emplace_back(CheckIdle, js.blockStart);
+      }
       if (endblock)
         m_code.emplace_back(EndBlock, js.downcountAmount);
     }

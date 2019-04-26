@@ -122,7 +122,7 @@ void SetIsThrottlerTempDisabled(bool disable)
 void FrameUpdateOnCPUThread()
 {
   if (NetPlay::IsNetPlayRunning())
-    NetPlay::NetPlayClient::SendTimeBase();
+    NetPlay::NetPlayClient::ActuallySendTimeBase();
 }
 
 // Display messages and return values

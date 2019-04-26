@@ -2213,23 +2213,33 @@ bool NetPlayClient::IsLocalPlayer(const PlayerId pid) const
   return pid == m_local_player->pid;
 }
 
+static std::vector<std::pair<u64, u32>> s_timebases;
+
 void NetPlayClient::SendTimeBase()
 {
   std::lock_guard<std::mutex> lk(crit_netplay_client);
 
-  if (netplay_client->m_timebase_frame % 60 == 0)
-  {
-    const sf::Uint64 timebase = SystemTimers::GetFakeTimeBase();
+  const sf::Uint64 timebase = SystemTimers::GetFakeTimeBase();
 
-    sf::Packet packet;
-    packet << static_cast<MessageId>(NP_MSG_TIMEBASE);
-    packet << timebase;
-    packet << netplay_client->m_timebase_frame;
-
-    netplay_client->SendAsync(std::move(packet));
-  }
+  s_timebases.push_back(std::make_pair(timebase, netplay_client->m_timebase_frame));
 
   netplay_client->m_timebase_frame++;
+}
+
+void NetPlayClient::ActuallySendTimeBase()
+{
+  sf::Packet packet;
+  packet << static_cast<MessageId>(NP_MSG_TIMEBASE);
+
+  for (auto p : s_timebases)
+  {
+    packet << sf::Uint64{p.first};
+    packet << p.second;
+  }
+
+  s_timebases.clear();
+
+  netplay_client->SendAsync(std::move(packet));
 }
 
 bool NetPlayClient::DoAllPlayersHaveGame()

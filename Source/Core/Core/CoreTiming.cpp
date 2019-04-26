@@ -20,6 +20,7 @@
 
 #include "Core/ConfigManager.h"
 #include "Core/Core.h"
+#include "Core/NetPlayClient.h"
 #include "Core/PowerPC/PowerPC.h"
 
 #include "VideoCommon/Fifo.h"
@@ -350,6 +351,9 @@ void Advance()
   // until the next slice:
   //        Pokemon Box refuses to boot if the first exception from the audio DMA is received late
   PowerPC::CheckExternalExceptions();
+
+  if (NetPlay::IsNetPlayRunning())
+    NetPlay::NetPlayClient::SendTimeBase();
 }
 
 void LogPendingEvents()
@@ -384,6 +388,7 @@ void Idle()
   }
 
   s_idled_cycles += DowncountToCycles(PowerPC::ppcState.downcount);
+  //INFO_LOG(POWERPC, "Idled cycles: %ld Downcount: %d", s_idled_cycles, PowerPC::ppcState.downcount);
   PowerPC::ppcState.downcount = 0;
 }
 

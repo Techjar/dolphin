@@ -140,6 +140,7 @@ public:
   bool IsLocalPlayer(PlayerId pid) const;
 
   static void SendTimeBase();
+  static void ActuallySendTimeBase();
   bool DoAllPlayersHaveGame();
 
   const PadMappingArray& GetPadMapping() const;

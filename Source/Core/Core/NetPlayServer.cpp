@@ -949,45 +949,48 @@ unsigned int NetPlayServer::OnData(sf::Packet& packet, Client& player)
 
   case NP_MSG_TIMEBASE:
   {
-    u64 timebase = Common::PacketReadU64(packet);
-    u32 frame;
-    packet >> frame;
-
-    if (m_desync_detected)
-      break;
-
-    std::vector<std::pair<PlayerId, u64>>& timebases = m_timebase_by_frame[frame];
-    timebases.emplace_back(player.pid, timebase);
-    if (timebases.size() >= m_players.size())
+    while (!packet.endOfPacket())
     {
-      // we have all records for this frame
+      u64 timebase = Common::PacketReadU64(packet);
+      u32 frame;
+      packet >> frame;
 
-      if (!std::all_of(timebases.begin(), timebases.end(), [&](std::pair<PlayerId, u64> pair) {
-            return pair.second == timebases[0].second;
-          }))
+      if (m_desync_detected)
+        break;
+
+      std::vector<std::pair<PlayerId, u64>>& timebases = m_timebase_by_frame[frame];
+      timebases.emplace_back(player.pid, timebase);
+      if (timebases.size() >= m_players.size())
       {
-        int pid_to_blame = 0;
-        for (auto pair : timebases)
+        // we have all records for this frame
+
+        if (!std::all_of(timebases.begin(), timebases.end(), [&](std::pair<PlayerId, u64> pair) {
+              return pair.second == timebases[0].second;
+            }))
         {
-          if (std::all_of(timebases.begin(), timebases.end(), [&](std::pair<PlayerId, u64> other) {
-                return other.first == pair.first || other.second != pair.second;
-              }))
+          int pid_to_blame = 0;
+          for (auto pair : timebases)
           {
-            // we are the only outlier
-            pid_to_blame = pair.first;
-            break;
+            if (std::all_of(timebases.begin(), timebases.end(), [&](std::pair<PlayerId, u64> other) {
+                  return other.first == pair.first || other.second != pair.second;
+                }))
+            {
+              // we are the only outlier
+              pid_to_blame = pair.first;
+              break;
+            }
           }
+
+          sf::Packet spac;
+          spac << (MessageId)NP_MSG_DESYNC_DETECTED;
+          spac << pid_to_blame;
+          spac << frame;
+          SendToClients(spac);
+
+          m_desync_detected = true;
         }
-
-        sf::Packet spac;
-        spac << (MessageId)NP_MSG_DESYNC_DETECTED;
-        spac << pid_to_blame;
-        spac << frame;
-        SendToClients(spac);
-
-        m_desync_detected = true;
+        m_timebase_by_frame.erase(frame);
       }
-      m_timebase_by_frame.erase(frame);
     }
   }
   break;
