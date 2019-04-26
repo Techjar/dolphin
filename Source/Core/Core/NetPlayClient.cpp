@@ -288,7 +288,7 @@ unsigned int NetPlayClient::OnData(sf::Packet& packet)
   MessageId mid;
   packet >> mid;
 
-  INFO_LOG(NETPLAY, "Got server message: %x", mid);
+  //INFO_LOG(NETPLAY, "Got server message: %x", mid);
 
   switch (mid)
   {
@@ -755,8 +755,17 @@ unsigned int NetPlayClient::OnData(sf::Packet& packet)
   {
     int pid_to_blame;
     u32 frame;
+    std::vector<std::pair<PlayerId, u32>> pc_list;
     packet >> pid_to_blame;
     packet >> frame;
+    while (!packet.endOfPacket())
+    {
+      PlayerId pid;
+      u32 pc;
+      packet >> pid;
+      packet >> pc;
+      pc_list.push_back(std::make_pair(pid, pc));
+    }
 
     std::string player = "??";
     std::lock_guard<std::recursive_mutex> lkp(m_crit.players);
@@ -766,7 +775,11 @@ unsigned int NetPlayClient::OnData(sf::Packet& packet)
         player = it->second.name;
     }
 
-    INFO_LOG(NETPLAY, "Player %s (%d) desynced!", player.c_str(), pid_to_blame);
+    INFO_LOG(NETPLAY, "Player %s (%d) desynced! Frame: %d", player.c_str(), pid_to_blame, frame);
+    for (auto p : pc_list)
+    {
+      INFO_LOG(NETPLAY, "PID: %d PC: %08x", p.first, p.second);
+    }
 
     m_dialog->OnDesync(frame, player);
   }
@@ -2213,7 +2226,7 @@ bool NetPlayClient::IsLocalPlayer(const PlayerId pid) const
   return pid == m_local_player->pid;
 }
 
-static std::vector<std::pair<u64, u32>> s_timebases;
+static std::vector<std::tuple<u64, u32, u32>> s_timebases;
 
 void NetPlayClient::SendTimeBase()
 {
@@ -2221,7 +2234,7 @@ void NetPlayClient::SendTimeBase()
 
   const sf::Uint64 timebase = SystemTimers::GetFakeTimeBase();
 
-  s_timebases.push_back(std::make_pair(timebase, netplay_client->m_timebase_frame));
+  s_timebases.push_back(std::make_tuple(timebase, netplay_client->m_timebase_frame, PowerPC::ppcState.pc));
 
   netplay_client->m_timebase_frame++;
 }
@@ -2233,8 +2246,9 @@ void NetPlayClient::ActuallySendTimeBase()
 
   for (auto p : s_timebases)
   {
-    packet << sf::Uint64{p.first};
-    packet << p.second;
+    packet << sf::Uint64{std::get<0>(p)};
+    packet << std::get<1>(p);
+    packet << std::get<2>(p);
   }
 
   s_timebases.clear();

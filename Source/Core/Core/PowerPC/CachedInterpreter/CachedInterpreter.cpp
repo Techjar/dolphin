@@ -116,6 +116,9 @@ void CachedInterpreter::Run()
     // NOTE: Exceptions may change PC
     CoreTiming::Advance();
 
+    //if (CPU::GetState() != CPU::State::Running)
+    //  break;
+
     do
     {
       ExecuteOneBlock();

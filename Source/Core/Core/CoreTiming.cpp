@@ -354,6 +354,10 @@ void Advance()
 
   if (NetPlay::IsNetPlayRunning())
     NetPlay::NetPlayClient::SendTimeBase();
+
+  //static u32 s_tick = 0;
+  //if (s_tick++ == 2330918)
+  //  Core::SetState(Core::State::Paused);
 }
 
 void LogPendingEvents()

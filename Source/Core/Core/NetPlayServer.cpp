@@ -667,7 +667,7 @@ unsigned int NetPlayServer::OnData(sf::Packet& packet, Client& player)
   MessageId mid;
   packet >> mid;
 
-  INFO_LOG(NETPLAY, "Got client message: %x", mid);
+  //INFO_LOG(NETPLAY, "Got client message: %x", mid);
 
   // don't need lock because this is the only thread that modifies the players
   // only need locks for writes to m_players in this thread
@@ -954,29 +954,31 @@ unsigned int NetPlayServer::OnData(sf::Packet& packet, Client& player)
       u64 timebase = Common::PacketReadU64(packet);
       u32 frame;
       packet >> frame;
+      u32 pc;
+      packet >> pc;
 
       if (m_desync_detected)
         break;
 
-      std::vector<std::pair<PlayerId, u64>>& timebases = m_timebase_by_frame[frame];
-      timebases.emplace_back(player.pid, timebase);
+      auto& timebases = m_timebase_by_frame[frame];
+      timebases.emplace_back(player.pid, timebase, pc);
       if (timebases.size() >= m_players.size())
       {
         // we have all records for this frame
 
-        if (!std::all_of(timebases.begin(), timebases.end(), [&](std::pair<PlayerId, u64> pair) {
-              return pair.second == timebases[0].second;
+        if (!std::all_of(timebases.begin(), timebases.end(), [&](auto pair) {
+              return std::get<1>(pair) == std::get<1>(timebases[0]);
             }))
         {
           int pid_to_blame = 0;
           for (auto pair : timebases)
           {
-            if (std::all_of(timebases.begin(), timebases.end(), [&](std::pair<PlayerId, u64> other) {
-                  return other.first == pair.first || other.second != pair.second;
+            if (std::all_of(timebases.begin(), timebases.end(), [&](auto other) {
+                  return std::get<0>(other) == std::get<0>(pair) || std::get<1>(other) != std::get<1>(pair);
                 }))
             {
               // we are the only outlier
-              pid_to_blame = pair.first;
+              pid_to_blame = std::get<0>(pair);
               break;
             }
           }
@@ -985,6 +987,11 @@ unsigned int NetPlayServer::OnData(sf::Packet& packet, Client& player)
           spac << (MessageId)NP_MSG_DESYNC_DETECTED;
           spac << pid_to_blame;
           spac << frame;
+          for (auto pair : timebases)
+          {
+            spac << std::get<0>(pair);
+            spac << std::get<2>(pair);
+          }
           SendToClients(spac);
 
           m_desync_detected = true;
