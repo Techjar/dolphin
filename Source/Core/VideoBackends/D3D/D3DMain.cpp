@@ -163,7 +163,6 @@ bool VideoBackend::Initialize(const WindowSystemInfo& wsi)
     return false;
   }
 
-  BBox::Init();
   g_shader_cache->InitializeShaderCache();
   return true;
 }
@@ -172,8 +171,6 @@ void VideoBackend::Shutdown()
 {
   g_shader_cache->Shutdown();
   g_renderer->Shutdown();
-
-  BBox::Shutdown();
 
   g_perf_query.reset();
   g_texture_cache.reset();
